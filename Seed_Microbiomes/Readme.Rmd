@@ -1,0 +1,60 @@
+---
+title: "readme"
+author: "allisonMertin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+## R Markdown
+
+# Seed microbiome comparisons between restored and natural sites
+
+## Description
+This repository contains all code used to analyse microbial community data for Microbial Ecology manuscript "Host species mediate distinct seed microbiome responses to restoration."
+
+## Workflow
+Run scripts in the following order:
+1. 01_import_data.R
+2. 02_decontam.R
+3. 03_diversity_metrics.R
+4. 04_diversity_metrics_stats.R
+5. 05_PCoA.R
+6. 06_barplots.R
+7. 07_PERMANOVA.R
+8. 08_indicator_taxa.R
+9. 09_assign_functional_guilds.R
+10. 10_core_microbes_and_heatmap.R
+
+## Requirements
+R version: 4.2.3
+
+Packages:
+- phyloseq
+- vegan
+- microbiome
+- pairwiseAdonis
+- EcolUtils
+- ape
+- decontam
+- nlme
+- emmeans
+- dplyr
+- ggplot2
+- plotrix
+- cowplot
+- gridextra
+- RColorBrewer
+- svglite
+- indicspecies
+- plyr
+- phylosmith
+- tidyverse
+- tidytext
+- patchwork
+- microeco
+- pheatmap
+
+## Notes
+- Raw sequence data for both 16SrRNA and ITS2 datasets at NCBI short read archive (SRA) BioProject PRJNA1432314, 
+- Example metadata are provided.
+- Example asv and taxonomy files are supplied for the 16S dataset.
+- All analyses rely on standard package functions as described in the associated manuscript.
