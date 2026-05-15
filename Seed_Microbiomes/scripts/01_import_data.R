@@ -14,7 +14,7 @@ KillZeroRCs <- function(x) {
 
 # read in OTU table
 ASV <- read.table(
-  "asv.txt",
+  "ASV_16S_All_Hosts_Subset_Final.txt",
   header = TRUE,
   sep = "\t",
   row.names = 1
@@ -26,7 +26,7 @@ ASV <- KillZeroRCs(ASV)
 # read in tax table
 # fill logical indicates that rows have unequal lengths due to blank fields
 TAXA <- read.table(
-  "taxonomy.txt",
+  "Taxonomy_Filtered_16S_Revised.txt",
   sep = "\t",
   fill = TRUE,
   row.names = 1
@@ -37,7 +37,7 @@ colnames(TAXA) <- c("Domain","Phylum", "Class", "Order", "Family", "Genus")
 
 # read in METAdata
 META <- read.table(
-  "Metadata.txt",
+  "Metadata_Run2R3R4Final_v2_16S.txt",
   header = TRUE,
   sep = "\t",
   row.names = 1
@@ -49,22 +49,23 @@ ASV <- as.matrix(ASV)
 TAXA <- as.matrix(TAXA)
 
 # install bioconductor to install BiocManager then install the packages phyloseq and Microbiome
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+#if (!require("BiocManager", quietly = TRUE))
+  #install.packages("BiocManager")
 
-BiocManager::install("phyloseq", force = TRUE)
+#BiocManager::install("phyloseq", force = TRUE)
 # had to install 'RCurl' using the source binaries at the Github page of RCurl.
 
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+#if (!require("BiocManager", quietly = TRUE))
+  #install.packages("BiocManager")
 
-BiocManager::install("microbiome")
-BiocManager::install("Phylosmith")
+#BiocManager::install("microbiome")
+#BiocManager::install("Phylosmith")
 
 # load libraries
 library(ape)
 library(phyloseq)
 library(microbiome)
+library(phylosmith)
 
 # combine OTU, taxa and METAdata files into a phyloseq object
 phy <- phyloseq(
@@ -73,8 +74,8 @@ phy <- phyloseq(
   sample_data(META)
 )
 
-# remove zero sum ASV
-phy <- prune_taxa((taxa_sums(phy) > 0), phy) #2302 ASVs in 156 samples
+# remove zero sum ASVs
+phy <- prune_taxa((taxa_sums(phy) > 0), phy)
 
 
 # remove non-bacterial reads. Repeat the same for fungal dataset.
