@@ -64,7 +64,7 @@ adonis2(
   strata = meta$SitePair
 )
 
-# Pairwise comparisons constrained by site pairs
+# Pairwise comparisons bonferroni corrrected by default
 
 
 # Use function by Pedro Martine Zarbizu https://github.com/pmartinezarbizu/pairwiseAdonis
