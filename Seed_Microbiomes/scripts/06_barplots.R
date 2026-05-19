@@ -11,6 +11,7 @@ library("svglite")
 
 # Merge samples by HostSpecies and SiteType. There must be a column named this in the metadata
 
+
 Host_SiteType<- merge_samples(bacteria, "Host_SiteType")
 
 ## Genus level relative abundance barplot - Figure 2 ##
@@ -23,19 +24,20 @@ genus <- psmelt(Genus)
 genus$Genus <- as.character(genus$Genus)
 
 #rename and pool Genera with <1% abundance
-genus$Genus[genus$Abundance < 1]<- " < 1% Abundance"
+genus$Genus[genus$Abundance < 2]<- " < 2% Abundance"
 write.csv(genus, "genus_barplot.csv", row.names=FALSE)
 
 #How many levels in Genus
 HowMany <- length(levels(as.factor(genus$Genus)))
 
-#Plot
+#Plot - N.B. colours were changed in Inkscape. Genus IDs (when ony family was provided) were provided by sequence similarity for that ASV against UNITE v8 database.
 ggplot(genus, aes(x = Sample, y = Abundance, fill = Genus)) +  
   geom_bar(stat = "identity") +
-  theme(legend.position="none", axis.title.x = element_blank(),
-        axis.text.x = element_text(angle = 90, hjust = 1)) +
-  facet_wrap(vars(Genus)) +
-  ylab("Relative Abundance of Bacterial Genera")
-  scale_fill_manual(values = c("#D3D3D3","#1F78B4","#B2DF8A","#FFFF00","#FB9A99","#E31A1C","#808080", "#E7298A","#FDBF6F","#FF7F00","#CAB2D6","#6A3D9A","#FFFF99", "#000000", "#E69200", "#56B4E9", "#009E73", "#FF6347", "#FFD700", "#D55F00", "#CB79A7", "#CC6583", "#FE34B4", "#EE23C1", "#FFD700", "#000566", "#FFCCCC", "#FF66FF","#FFDB6D", "#C4961A", "#00AFBB", "#009999", "#A6CEE3","#1F78B4","#B2DF8A","#FFFF00","#FB9A99","#E31A1C","#808080", "#E7298A","#FDBF6F","#FF7F00","#CAB2D6","#6A3D9A","#FFFF99", "#000000", "#E69200", "#56B4E9", "#009E73", "#FF6347", "#FFD700", "#D55F00", "#CB79A7", "#CC6583", "#FE34B4", "#EE23C1", "#FFD700", "#000566", "#FFCCCC", "#FF66FF","#FFDB6D", "#C4961A", "#00AFBB", "#009999", "#A6CEE3","#1F78B4","#B2DF8A","#FFFF00","#FB9A99","#E31A1C","#808080", "#E7298A","#FDBF6F","#FF7F00","#CAB2D6","#6A3D9A","#FFFF99", "#000000", "#E69200", "#56B4E9", "#009E73", "#FF6347", "#FFD700", "#D55F00", "#CB79A7", "#CC6583", "#FE34B4", "#EE23C1", "#FFD700", "#000566", "#FFCCCC", "#FF66FF","#FFDB6D", "#C4961A", "#00AFBB", "#009999"))
+  theme(legend.position="right", axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1)) +  geom_col(width = 0.1) +
+  ylab("Relative Abundance of Bacterial Genera \n") +  
+  scale_fill_manual(values = c("#A6CEE3","#1F78B4","#B2DF8A","#33A02C","#FB9A99","#E31A1C","#1B9E77", "#E7298A","#FDBF6F","#FF7F00","#CAB2D6","#6A3D9A","#FFFF99","#FFFFFF", "#6A3D9A","#FFFF99","#FFFFFF", "#6A3D9A","#FFFF99","#FFFFFF", "#A6CEE3","#1F78B4","#B2DF8A","#33A02C","#FB9A99","#E31A1C","#1B9E77", "#E7298A"))
 
+
+  
 #-----------------------------------------------------------------------------##
