@@ -1,0 +1,113 @@
+---
+title: "QIIME2 Metabarcoding Workflow"
+author: "GitHub Repository"
+output: html_document
+---
+
+# Overview
+
+This repository contains a QIIME2 workflow for processing paired-end metabarcoding data, including:
+
+- Importing demultiplexed FASTQ files
+- Primer trimming using Cutadapt
+- Quality filtering and denoising with DADA2
+- Taxonomic assignment
+- Phylogenetic tree construction
+- Diversity analysis
+- Exporting outputs for downstream analysis in R
+
+# References
+
+This workflow was adapted from:
+
+1. QIIME2 Moving Pictures Tutorial  
+https://docs.qiime2.org/2019.7/tutorials/moving-pictures/
+
+2. Australian BioCommons Workshop  
+https://zenodo.org/records/6350808
+
+
+# Software Requirements
+
+## QIIME2
+
+Recommended version:
+
+```bash
+conda activate qiime2-2021.8
+```
+
+
+## Demultiplexed fast files for this project are available at the NCBI's Sequence Read Archive Bioproject Accession:BioProjectID: PRJNA1432314
+
+# Workflow Summary
+
+## 1. Rename FASTQ Files
+
+Files must follow Casava 1.8 naming conventions:
+
+
+## 2. Import Data
+
+```bash
+qiime tools import
+```
+
+## 3. Trim Primers
+
+```bash
+qiime cutadapt trim-paired
+```
+
+## 4. Assess Sequence Quality
+
+```bash
+qiime demux summarize
+```
+
+Visualize `.qzv` outputs using:
+
+https://view.qiime2.org
+
+## 5. Denoise Sequences
+
+```bash
+qiime dada2 denoise-paired
+```
+
+## 6. Assign Taxonomy
+
+```bash
+qiime feature-classifier classify-sklearn
+```
+
+## 7. Build Phylogenetic Tree
+
+- MAFFT alignment
+- Mask alignment
+- FastTree phylogeny
+- Midpoint rooting
+
+## 8. Diversity Analyses
+
+```bash
+qiime diversity alpha-rarefaction
+```
+
+## 9. Export Data for R
+
+Outputs exported include:
+
+- Feature table (`feature-table.tsv`)
+- Taxonomy table
+- Phylogenetic tree (`tree.nwk`)
+
+
+# Notes
+
+- Adjusted trimming parameters based on quality plots.
+- Primer sequences are target-specific will need to change if processing ITS2 or 16S.
+- DADA2 runtime depends on dataset size and computational resources.
+- The workflow assumes paired-end sequencing data.
+
+```
