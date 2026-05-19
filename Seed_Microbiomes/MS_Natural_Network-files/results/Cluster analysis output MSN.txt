@@ -1,0 +1,17 @@
+MCODE App Results				
+"Date: 23 July 2024, 5:32:26 pm"				
+				
+Parameters:				
+   Network Scoring:				
+      Include Loops: false  Degree Cutoff: 2				
+   Cluster Finding:				
+      Node Score Cutoff: 0.2  Haircut: true  Fluff: false  K-Core: 2  Max. Depth from Seed: 100				
+				
+Cluster	Score (Density*#Nodes)	Nodes	Edges	Node IDs
+1	5	5	10	"385, 359, 234, 320, 295"
+2	3.333	4	5	"181, 329, 296, 445"
+3	3.2	6	8	"34, 62, 53, 30, 75, 100"
+4	3	3	3	"363, 302, 412"
+5	3	3	3	"42, 45, 23"
+6	3	3	3	"347, 171, 170"
+7	2.667	4	4	"264, 208, 224, 248"
