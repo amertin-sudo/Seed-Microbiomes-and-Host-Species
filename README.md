@@ -23,7 +23,7 @@ project_root/
 │
 ├── QIIME2_code/
 ├── QIIME2_inputs/
-├── R_scripts/
+├── scripts/
 ├── CoNet_networks/
 ├── 16S_R_input_files/
 ├── ITS2_R_input_files/
