@@ -1,18 +1,18 @@
-
 # Identify core microbial taxa using a prevalence-abundance framework
-# Requires: phyloseq (optional), tidyverse, microbiome (optional), pheatmap
-#
+
 # Core definition used here:
 # - A taxon is considered "core" if:
 #     prevalence >= prevalence_threshold    (prevalence = percent of samples where taxon >= detection_threshold)
 # AND mean_relative_abundance >= abundance_threshold
 # This dual threshold reduces calling very-rare but widespread taxa or very-abundant but rare taxa "core".
 
-# Input: either provide a phyloseq object file (RDS), or OTU table + metadata CSVs.Need to subset phyloseq per Host species.
+# Input: either provide a phyloseq object file (RDS), or OTU table + metadata CSVs.
+## Need to use subsetted phyloseq per Host species as core ASVs are identified per host species.
+##Below pipeline is for Melaleuca quinquenervia for bacteria core identification.
 
-phyloseq_rds <- "/pathtords/sample.rds"  # e.g. "data/my_phyloseq.rds" OR set to NULL to use CSV inputs
-otu_csv <- "data/otu_table.csv"    # rows = taxa, columns = samples OR opposite (script will detect)
-meta_csv <- "data/sample_metadata.csv" # sample metadata, with column "SampleID" matching sample names
+phyloseq_rds <- "MQ_phyloseq_16S.rds"  # e.g. "data/my_phyloseq.rds" OR set to NULL to use CSV inputs
+#otu_csv <- "data/otu_table.csv"    # rows = taxa, columns = samples OR opposite (script will detect)
+#meta_csv <- "data/sample_metadata.csv" # sample metadata, with column "SampleID" matching sample names
 
 # Thresholds (customise)
 prevalence_threshold <- 0.5   # fraction of samples (0-1) : present in >=50% of samples
@@ -170,7 +170,7 @@ if (any(sample_sums == 0)) {
 relab <- sweep(otu_numeric, 2, sample_sums, FUN = "/")  # taxa x samples matrix of relative abundance
 
 # ----------------------------
-# Compute prevalence & mean abundance overall
+# Exploratory: Compute prevalence & mean abundance overall
 # ----------------------------
 prev_abund_tbl <- compute_prevalence_abundance(relab, detection_thresh = detection_threshold)
 
@@ -186,7 +186,7 @@ write_csv(prev_abund_tbl, file.path(out_dir, "core_prevalence_abundance_overall.
 message("Saved overall prevalence/abundance table to ", file.path(out_dir, "core_prevalence_abundance_overall.csv"))
 
 # ----------------------------
-# Identify core taxa list
+# Exploratory: Identify core taxa list
 # ----------------------------
 core_taxa_overall <- prev_abund_tbl %>% filter(IsCore) %>% pull(Taxon)
 message("Number of core taxa (overall): ", length(core_taxa_overall))
@@ -196,7 +196,7 @@ write_lines(core_taxa_overall, file.path(out_dir, "core_taxa_overall_HostSpecies
 
 
 # ----------------------------
-# General Plots to investigate trends
+# Exploratory: General Plots to investigate trends
 # ----------------------------
 # 1) Prevalence vs mean abundance scatter, core highlighted
 plot_df <- prev_abund_tbl %>% mutate(LogMean = log10(MeanRelAbundance + 1e-12))
@@ -214,35 +214,7 @@ p1 <- ggplot(plot_df, aes(x = Prevalence, y = LogMean, label = Taxon)) +
 ggsave(filename = file.path(out_dir, "prevalence_vs_abundance.png"), plot = p1, width = 7, height = 5, dpi = 300)
 message("Saved plot: prevalence_vs_abundance.png")
 
-# 2) Heatmap of core taxa across samples (only if any cores)
-if (length(core_taxa_overall) > 0) {
-  # subset relab to core taxa and order samples by group if available
-  mat_core <- relab[core_taxa_overall, , drop = FALSE]
-  # convert to percent for display
-  mat_core_pct <- mat_core * 100
-  # optional sample annotation
-  sample_ann <- NULL
-  if ("SampleID" %in% colnames(sample_meta)) {
-    sample_meta_sub <- sample_meta %>% filter(SampleID %in% colnames(mat_core)) %>%
-      column_to_rownames("SampleID")
-    if (!is.null(grouping_variable) && grouping_variable %in% colnames(sample_meta_sub)) {
-      sample_ann <- data.frame(Group = sample_meta_sub[[grouping_variable]])
-      rownames(sample_ann) <- rownames(sample_meta_sub)
-    }
-  }
-  # pheatmap
-  pheatmap(mat_core_pct,
-           cluster_rows = TRUE,
-           cluster_cols = FALSE,
-           show_rownames = TRUE,
-           annotation_col = sample_ann,
-           main = "Heatmap of core taxa (relative abundance, %)",
-           filename = file.path(out_dir, "heatmap_core_taxa.png"),
-           width = 9, height = 6)
-  message("Saved heatmap: heatmap_core_taxa.png")
-} else {
-  message("No core taxa found with the current thresholds; skipping heatmap.")
-}
+
 
 # ----------------------------
 # Summary output
@@ -258,27 +230,9 @@ summary_out <- list(
 write_lines(capture.output(print(summary_out)), file.path(out_dir, "summary_MQ.txt"))
 message("Saved summary to ", file.path(out_dir, "summary-final.txt"))
 
-# ----------------------------
-# OPTIONAL: Using microbiome::core (if installed & phyloseq provided)
-# ----------------------------
-if (exists("ps") && inherits(ps, "phyloseq")) {
-  # microbiome::core can compute core across prevalence cutoffs easily
-  if (requireNamespace("microbiome", quietly = TRUE)) {
-    message("Also computing microbiome::core standard output (prevalence sweep)...")
-    core_sweep <- microbiome::core(ps, detection = detection_threshold, prevalences = seq(0,1,by=0.01))
-    # core_sweep is a list: you can inspect how many taxa remain core at different prevalence cutoffs
-    # Save a simple table: prevalence cutoff -> n taxa core
-    core_counts <- sapply(core_sweep, function(x) sum(x))
-    core_counts_tbl <- tibble(Prevalence = seq(0,1,by=0.01), nCore = as.integer(core_counts))
-    write_csv(core_counts_tbl, file.path(out_dir, "microbiome_core_sweep_counts.csv"))
-    message("Saved microbiome::core sweep counts to microbiome_core_sweep_counts.csv")
-  }
-}
-
-message("Core detection complete. Results are in folder: ", normalizePath(out_dir))
 
 # ----------------------------
-# Run Anlysis: Identify core taxa per group (e.g., per Site or SiteType)
+# Run Analysis: Identify core taxa per group (e.g., per SiteType)
 # ----------------------------
 
 grouping_variable <- "SiteType"  # must be column in metadata, or NULL
@@ -349,7 +303,7 @@ if (!is.null(grouping_variable) && grouping_variable %in% colnames(sample_meta))
   }
 }
 
-# ------------------------Heatmap using core_by_group file-----------------------
+# ------------------------Plot Heatmap using core_by_group file-----------------------
 library(dplyr)
 library(tibble)
 library(pheatmap)
@@ -405,9 +359,9 @@ write.csv(core_relab_site_df,
           file = file.path(out_dir, "core_relab_site_MQ_Bacteria.csv"),
           row.names = FALSE)
 
-# Read exported .csv and add taxon names
-# Read in the csv file
-core_relab <- read.csv("core_relab_site_TT_Fungi.csv", 
+# Read exported .csv and add taxon names for SVs. This was done by sequence similarity of the ASV sequence to databases Silva or UNITE.
+# Read in the relabeled csv file
+core_relab <- read.csv("core_relab_site_MQ_Bacteria.csv", 
                        header = TRUE, 
                        row.names = 1)  # row.names=1 if first column is IDs
 
@@ -458,13 +412,8 @@ ann_colors <- list(
 # Heatmap color palette
 abundance_colors <- colorRampPalette(c("white","magenta", "#F078D2", "red"))(100)
 
-# ----------------------------
-# Export heatmap as SVG
-# ----------------------------
-
-svg(file.path(out_dir, "core_taxa_heatmap_by_site.svg"), width = 12, height = 6)
-
-TT_FUN<- pheatmap(
+#Create plots for each host species. Repeat for bacteria and fungi. Chnage object name as per below in L454-459
+MQ_BAC<- pheatmap(
   core_relab_site,
   cluster_rows = TRUE,
   cluster_cols = FALSE,
@@ -496,7 +445,7 @@ g6 <- TT_FUN$gtable
 svg("combined_heatmaps.svg", width = 20, height = 20)
 
 # Arrange them in a single output (e.g., side by side)
-final_plot <- grid.arrange(g1, g2, g3, g4, g5, g6, nrow = 3)
+final_plot <- grid.arrange(g1,g2,g3,g4,g5,g6, nrow = 3)
 
 dev.off()
 
