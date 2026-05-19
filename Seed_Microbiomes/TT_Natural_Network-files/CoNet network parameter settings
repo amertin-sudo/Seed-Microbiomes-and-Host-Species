@@ -1,0 +1,37 @@
+# CoNet vs. 1.1.1.beta compiled for Cytoscape 3.X parameter values
+# Time of export: Tue Jul 23 09:24:28 AEST 2024
+input==/Users/allisonmertin/Desktop/CoNet/Melaleuca/All Melaleuca/filtered to greater than 100 reads/Natural/asv_All_MQ_N.txt
+method==ensemble
+scoremergestrategy==scoremethodnum
+no_rserve==true
+metadata==/Users/allisonmertin/Desktop/CoNet/Melaleuca/All Melaleuca/filtered to greater than 100 reads/Natural/taxa_ALL_MQ_N.txt
+metadataattribs==Kingdom/phylum/Class/Order/Family/Genus/Species
+verbosity==FATAL
+minetdisc==equalfreq
+minetmiestimator==mi.shrink
+kernelwidth==0.25
+pseudocount==1.0E-8
+lineage_separator==--
+edgethreshold==0.05
+nantreatment==none
+nantreatmentparam==1
+networkmergestrategy==intersection
+mi_implementation==jsl
+iterations==100
+delimiter==tab
+rserve_host==127.0.0.1
+rserve_port==6311
+correlnonrandp==fisherz
+multicorr==bonferroni
+inference==mrnet
+min==1
+measure2==supp
+measure1==conf
+minsupport==2
+randroutine==none
+matrixtype==abundance
+resamplemethod==bootstrap
+ensemblemethods==correl_pearson/dist_bray
+max==3
+format==gdl
+ensembleparams==correl_pearson~upperThreshold=0.1/correl_pearson~lowerThreshold=-0.1/dist_bray~lowerThreshold=0.1
