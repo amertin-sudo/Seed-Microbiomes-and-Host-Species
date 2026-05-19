@@ -9,7 +9,7 @@ library(ggplot2)
 library(cowplot)
 library(gridExtra)
 library(svglite)
-remotes::install_github("schuyler-smith/phylosmith")
+#remotes::install_github("schuyler-smith/phylosmith")
 library(tidyverse)
 library(tidytext)
 library(patchwork)
@@ -17,13 +17,14 @@ library(patchwork)
 ###For this to work correctly, the order of your samples MUST MATCH the order of the classifications you assign.
 ###You are working from the asv table which does not have the corresponding metadata.
 ###To get around this I pre-organize my data by assigning each treatment a numerical value and sorting to keep each group together.
-#Analysis is run on a subset of samples that correspond to a single host species. This is then repeated separately for bacteria and fungal data.
 
+
+#Analysis is run on a subset of samples that correspond to a single host species. This is then repeated separately for bacteria and fungal data.
+#Relies on having loaded the subsetted phyloseq objects from previous scripts.
 
 ##ASV LEVEL###
-
 # This package does not work with data in Phyloseq format, so we will have to adjust that.
-rel <- transform_sample_counts(bacteria_subset, function(x) 100 * x/sum(x))
+rel <- transform_sample_counts(bacteria_MQ, function(x) 100 * x/sum(x))
 
 #order metadata by variable of interest and check metadata table to confirm
 rel <- set_sample_order(rel, 'SiteType')
@@ -48,15 +49,15 @@ asv.table <- as.data.frame(asv.table)
 asv.table <- cbind(sampNames, asv.table)
 
 
-# Defining classification of samples (groups have to be in discrete categories)
+# Defining classification of samples (groups have to be in discrete categories). Count how many are assigned to each sitetype. then change the line below.
 count(meta$SiteType)
-group <- c(rep("Natural", 56), rep("Restored", 63))
+group <- c(rep("Natural", 40), rep("Restored", 44))
 
 # Performing the indicator value analysis (omit sampNames column in asv table, otherwise indval fails)
 indval = multipatt(asv.table[,-1], group, control = how(nperm=999))
 
 # Displaying the data: we can set the thresholds of specificity, sensitivity and significance
-summary(indval, At = 0.2, Bt = 0.2, alpha = 0.05, func = "IndVal")
+summary(indval, At = 0.1, Bt = 0.1, alpha = 0.05, func = "IndVal")
 
 # The indicator value index is the product of two components, called "At" and "Bt"
 # Component "A" is the probability that a sample belongs to its target group
@@ -66,63 +67,93 @@ summary(indval, At = 0.2, Bt = 0.2, alpha = 0.05, func = "IndVal")
 # of the ASV as indicator of the target sample group.
 
 # For easier reporting, transfer the output in a file:
-capture.output(summary(indval, invdalcomp = TRUE, At = 0.2, Bt = 0.2, alpha = 0.05), file = "IndvalOutput_hostSpecies.txt")
+capture.output(summary(indval, invdalcomp = TRUE, At = 0.1, Bt = 0.1, alpha = 0.05), file = "IndvalOutput_bacteria_TT.txt")
+
+
 
 ## Horizontal Bar Chart for Indicator species ##########
+# Outputs are combined. Only Indicator species with high indicator values were retained in further plots.
+# run once for bacteria, again for fungi, then combine together at end.
 
-#run once for bacteria, again for fungi, then combine together at end.
 
+library(tidyverse)
+library(tidytext)
+library(patchwork)
 
-df_bacteria <- read_csv("indicator_species_Bacterial.csv") #needs to have guild data
+#-----------------------------
+# LOAD DATA
+#-----------------------------
+df_bacteria <- read_csv("indicator_species_Bacterial.csv")
 
-# Define consistent guild levels & colours
+#-----------------------------
+# DEFINE GUILDS
+#-----------------------------
 guild_levels <- c("LichenSymbiont", "PlantSymbiont", "PlantPathogen",
                   "Rhizosphere", "Soil", "Unassigned")
 
 guild_colors <- c(
-  "LichenSymbiont" = "#8ff2d1",      # red
-  "PlantSymbiont" = "#f59784",      # blue
-  "PlantPathogen" = "#8fb0f2", # green
-  "Rhizosphere" = "#f2d18f",    # purple
-  "Soil" = "#F28fb0",
-  "Unassigned" = "darkgrey"
+  "LichenSymbiont" = "#8ff2d1",
+  "PlantSymbiont"  = "#f59784",
+  "PlantPathogen"  = "#8fb0f2",
+  "Rhizosphere"    = "#f2d18f",
+  "Soil"           = "#F28fb0",
+  "Unassigned"     = "darkgrey"
 )
 
-df_bacteria$Guild <- factor(df_bacteria$Guild, levels = guild_levels)
+df_bacteria <- dplyr::mutate(
+  df_bacteria,
+  Guild = factor(Guild, levels = guild_levels)
+)
 
+#-----------------------------
+# LOOP THROUGH HOSTS
+#-----------------------------
 plot_list <- list()
 
 for(host in unique(df_bacteria$HostSpecies)) {
   
-  df_sub <- df_bacteria %>% filter(HostSpecies == host)
+  df_sub <- df_bacteria %>%
+    dplyr::filter(HostSpecies == host)
   
-  # Order species: SiteType first, then IndVal
   df_sub <- df_sub %>%
-    mutate(SiteType = factor(SiteType, levels = c("Restored", "Natural"))) %>%
-    arrange(SiteType, IndVal) %>%
-    mutate(Species_order = row_number())
+    dplyr::mutate(SiteType = factor(SiteType, levels = c("Restored", "Natural"))) %>%
+    dplyr::arrange(SiteType, IndVal) %>%
+    dplyr::mutate(Species_order = dplyr::row_number())
   
-  # Dotted line between Restored and Natural
+  # Separator line
   line_pos <- df_sub %>%
-    filter(SiteType == "Restored") %>%
-    summarise(yint = max(Species_order) + 0.5)
+    dplyr::filter(SiteType == "Restored") %>%
+    dplyr::summarise(
+      yint = max(Species_order) + 0.5,
+      .groups = "drop"
+    )
   
-  # Midpoint label positions
+  # Label positions
   label_pos <- df_sub %>%
-    group_by(SiteType) %>%
-    summarise(ypos = mean(Species_order))
+    dplyr::group_by(SiteType) %>%
+    dplyr::summarise(
+      ypos = mean(Species_order),
+      .groups = "drop"
+    )
   
+  # Plot
   p_bacteria <- ggplot(df_sub, aes(
     x = IndVal,
     y = reorder(Species, Species_order),
     fill = Guild
   )) +
     geom_col() +
-    scale_fill_manual(values = guild_colors, drop = FALSE) +  # keep all levels
-    scale_x_continuous(limits = c(0, 1.1),
-                       expand = expansion(mult = c(0, 0.02))) +
-    labs(x = "IndVal test statistic", y = "Species", fill = "Guild",
-         title = host) +
+    scale_fill_manual(values = guild_colors, drop = FALSE) +
+    scale_x_continuous(
+      limits = c(0, 1.1),
+      expand = expansion(mult = c(0, 0.02))
+    ) +
+    labs(
+      x = "IndVal test statistic",
+      y = "Species",
+      fill = "Guild",
+      title = host
+    ) +
     theme_bw() +
     theme(
       axis.text.y = element_text(size = 7),
@@ -151,13 +182,19 @@ for(host in unique(df_bacteria$HostSpecies)) {
   plot_list[[host]] <- p_bacteria
 }
 
-# Combine plots with a single shared legend
-combined_plot_bacteria <- wrap_plots(plot_list, ncol = 1, guides = "collect") &
+#-----------------------------
+# COMBINE PLOTS
+#-----------------------------
+combined_plot_bacteria <- patchwork::wrap_plots(plot_list, ncol = 1, guides = "collect") &
   theme(legend.position = "right")
 
 print(combined_plot_bacteria)
 
-# --- Combine fungi and bacteria outputs ---
+# --- Combine fungi and bacteria outputs once run for fungi --- #
 final_plot <- (combined_plot_fungi | combined_plot_bacteria)
 
 print(final_plot)
+
+
+
+
