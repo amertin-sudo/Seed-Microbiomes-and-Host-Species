@@ -182,10 +182,10 @@ Analyses include:
 - Diversity analyses
 - Statistical testing
 - Ordination analyses
-- Differential abundance and indicator taxa analyses
+- Indicator taxa analyses
 - Functional guild assignment
 - Core microbiome analyses
-- Visualisation
+
 
 ---
 
