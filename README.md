@@ -1,2 +1,390 @@
-# Seed-Microbiomes-and-Host-Species
-This is a repository for the scripts used to run the analyses for the Microbial Ecology manuscript entitled "HostSpecies mediate district responses to restoration". 
+
+# Seed Microbiome Comparisons Between Restored and Natural Sites
+
+## Overview
+
+This repository contains all code, workflows, and supporting files used to analyse microbial community data for the manuscript:
+
+> **"Host species mediate distinct seed microbiome responses to restoration."**
+
+The repository includes:
+
+- QIIME2 metabarcoding workflows for sequence processing
+- R workflows for downstream statistical and ecological analyses
+- CoNet and Cytoscape network analysis session files
+- Input data and processed outputs for reproducibility
+
+---
+
+# Repository Structure
+
+```text
+project_root/
+│
+├── QIIME2_code/
+├── QIIME2_inputs/
+├── R_scripts/
+├── CoNet_networks/
+├── 16S_R_input_files/
+├── ITS2_R_input_files/
+└── README.Rmd
+```
+
+---
+
+# QIIME2 Metabarcoding Workflow
+
+## Overview
+
+This workflow processes paired-end metabarcoding sequencing data using QIIME2, including:
+
+- Importing demultiplexed FASTQ files
+- Primer trimming with Cutadapt
+- Quality filtering and denoising with DADA2
+- Taxonomic assignment
+- Phylogenetic tree construction
+- Diversity analyses
+- Exporting outputs for downstream analysis in R
+
+---
+
+## References
+
+This workflow was adapted from:
+
+1. QIIME2 Moving Pictures Tutorial  
+   <https://docs.qiime2.org/2019.7/tutorials/moving-pictures/>
+
+2. Australian BioCommons Workshop  
+   <https://zenodo.org/records/6350808>
+
+---
+
+## Software Requirements
+
+### QIIME2
+
+Recommended version:
+
+```bash
+conda activate qiime2-2021.8
+```
+
+---
+
+## Sequence Data Availability
+
+Demultiplexed FASTQ files for this project are available through the NCBI Sequence Read Archive (SRA):
+
+- **BioProject Accession:** `PRJNA1432314`
+
+---
+
+# QIIME2 Workflow Summary
+
+## 1. Rename FASTQ Files
+
+Files must follow Casava 1.8 naming conventions.
+
+---
+
+## 2. Import Data
+
+```bash
+qiime tools import
+```
+
+---
+
+## 3. Trim Primers
+
+```bash
+qiime cutadapt trim-paired
+```
+
+---
+
+## 4. Assess Sequence Quality
+
+```bash
+qiime demux summarize
+```
+
+Visualise `.qzv` outputs using:
+
+<https://view.qiime2.org>
+
+---
+
+## 5. Denoise Sequences
+
+```bash
+qiime dada2 denoise-paired
+```
+
+---
+
+## 6. Assign Taxonomy
+
+```bash
+qiime feature-classifier classify-sklearn
+```
+
+---
+
+## 7. Build Phylogenetic Tree
+
+Workflow includes:
+
+- MAFFT alignment
+- Mask alignment
+- FastTree phylogeny
+- Midpoint rooting
+
+---
+
+## 8. Diversity Analyses
+
+```bash
+qiime diversity alpha-rarefaction
+```
+
+---
+
+## 9. Export Data for R
+
+Exported outputs include:
+
+- Feature table (`feature-table.tsv`)
+- Taxonomy table (`taxonomy.tsv`)
+- Phylogenetic tree (`tree.nwk`)
+
+---
+
+## Notes
+
+- Trimming parameters were adjusted based on sequence quality plots. Parameters used are noted in the code.
+- Primer sequences are target-specific and should be modified for ITS2 and 16S datasets.
+- The workflow assumes paired-end sequencing data.
+
+---
+
+# R Analysis Workflow
+
+## Overview
+
+The R workflow performs downstream ecological and statistical analyses on bacterial (16S rRNA) and fungal (ITS2) microbiome datasets.
+
+Analyses include:
+
+- Data import and preprocessing
+- Contaminant removal
+- Diversity analyses
+- Statistical testing
+- Ordination analyses
+- Differential abundance and indicator taxa analyses
+- Functional guild assignment
+- Core microbiome analyses
+- Visualisation
+
+---
+
+## Workflow Order
+
+Run scripts in the following order:
+
+1. `01_import_data.R`
+2. `02_decontam.R`
+3. `03_diversity_metrics.R`
+4. `04_diversity_metrics_stats.R`
+5. `05_PCoA.R`
+6. `06_barplots.R`
+7. `07_PERMANOVA.R`
+8. `08_indicator_taxa.R`
+9. `09_assign_functional_guilds.R`
+10. `10_core_microbes_and_heatmap.R`
+
+---
+
+## R Requirements
+
+### R Version
+
+```r
+R version 4.2.3
+```
+
+### Required Packages
+
+```r
+phyloseq
+vegan
+microbiome
+pairwiseAdonis
+EcolUtils
+ape
+decontam
+nlme
+emmeans
+dplyr
+ggplot2
+plotrix
+cowplot
+gridextra
+RColorBrewer
+svglite
+indicspecies
+plyr
+phylosmith
+tidyverse
+tidytext
+patchwork
+microeco
+pheatmap
+```
+
+---
+
+## Input Files
+
+Separate input directories are provided for bacterial and fungal datasets:
+
+- `16S_R_input_files/`
+- `ITS2_R_input_files/`
+
+These directories contain:
+
+- ASV tables
+- Metadata files
+- Taxonomy assignment files
+- Phyloseq `.rds` objects for all hosts combined, and separately subset for each host species.
+
+---
+
+## Notes
+
+- Raw sequence data for both 16S rRNA and ITS2 datasets are available through the NCBI SRA.
+- The analysis pipeline was run separately for bacterial and fungal datasets.
+- Current script file names and examples correspond to the 16S bacterial dataset.
+- Equivalent ITS2 fungal analyses require modification of input file names and paths.
+
+---
+
+# CoNet and Cytoscape Network Analyses
+
+## Overview
+
+This section contains all CoNet and Cytoscape network analysis files used in the study.
+
+Six network analysis directories are provided corresponding to host species and treatment combinations:
+
+- `MQ_Natural` — *Melaleuca quinquenervia* natural sites
+- `MQ_Restored` — *Melaleuca quinquenervia* restored sites
+- `MS_Natural` — *Microlaena stipoides* natural sites
+- `MS_Restored` — *Microlaena stipoides* restored sites
+- `TT_Natural` — *Themeda triandra* natural sites
+- `TT_Restored` — *Themeda triandra* restored sites
+
+---
+
+# Directory Structure
+
+```text
+project_root/
+│
+├── MQ_Natural/
+│   ├── input_files/
+│   │   ├── ASV/
+│   │   └── taxa/
+│   ├── results/
+│   └── *.cys
+│
+├── MQ_Restored/
+│   ├── input_files/
+│   │   ├── ASV/
+│   │   └── taxa/
+│   ├── results/
+│   └── *.cys
+│
+├── MS_Natural/
+│   ├── input_files/
+│   │   ├── ASV/
+│   │   └── taxa/
+│   ├── results/
+│   └── *.cys
+│
+├── MS_Restored/
+│   ├── input_files/
+│   │   ├── ASV/
+│   │   └── taxa/
+│   ├── results/
+│   └── *.cys
+│
+├── TT_Natural/
+│   ├── input_files/
+│   │   ├── ASV/
+│   │   └── taxa/
+│   ├── results/
+│   └── *.cys
+│
+└── TT_Restored/
+    ├── input_files/
+    │   ├── ASV/
+    │   └── taxa/
+    ├── results/
+    └── *.cys
+```
+
+---
+
+# Folder Descriptions
+
+## `input_files/`
+
+Contains all input data used for CoNet network construction and downstream analyses.
+
+### `ASV/`
+
+Contains log-transformed ASV abundance tables used in network construction and analyses.
+
+### `taxa/`
+
+Contains taxonomy assignment files corresponding to ASV datasets.
+
+---
+
+## `results/`
+
+Contains outputs generated from CoNet analyses and downstream processing, including:
+
+- Network statistics
+- Edge lists
+- Node tables
+- MCODE cluster analyses
+
+---
+
+# Cytoscape Session Files (`.cys`)
+
+Each network directory contains Cytoscape session files (`.cys`) generated during CoNet analyses.
+
+### Important Note
+
+The `MQ_Natural` Cytoscape session file contains multiple exploratory networks generated during method development.
+
+- **Network 18** corresponds to the final network generated using the parameter settings described in the associated parameter file.
+- Network 18 was the version included in the final study analyses.
+
+---
+
+# Reproducibility
+
+This repository is intended to support full reproducibility of the analyses presented in the manuscript.
+
+All scripts, processed data, workflow descriptions, and network analysis files required to reproduce the study outputs are provided.
+
+---
+
+# Contact
+
+For questions regarding the workflows or analyses, please contact the repository author.
